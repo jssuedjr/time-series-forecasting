@@ -16,3 +16,5 @@ python -m ipykernel install --user \
     --name ams586 \
     --display-name "Python (AMS 586)"
 "
+
+The shared_code folder becomes a Python project to avoid pathing issues when using functions from shared_code for each sub-problem.
