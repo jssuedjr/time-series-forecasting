@@ -1,0 +1,29 @@
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ams586-timeseries"
+version = "0.1.0"
+description = "Shared forecasting tools for AMS 586"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "statsmodels",
+    "matplotlib",
+    "yfinance"
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyterlab",
+    "ipykernel",
+    "pytest"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shared_code*"]

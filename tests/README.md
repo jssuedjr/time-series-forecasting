@@ -1,0 +1,1 @@
+run all tests from your project root with "python -m pytest tests/ -v" in terminal
