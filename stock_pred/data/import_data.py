@@ -18,7 +18,7 @@ df = yf.download(
     multi_level_index=False
 )
 
-## old from gpt 
+## old from gpt 1
 #- Adjusted Close: A historical price series adjusted for stock splits and dividends.
 ticker = yf.Ticker("TSLA")
 df = ticker.history(period="5y")
