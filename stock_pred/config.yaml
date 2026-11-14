@@ -1,0 +1,20 @@
+# TSLA closing-price forecast — project configuration.
+# Paths are relative to the repository root.
+
+data:
+  tickers: [TSLA, QQQ]        # QQQ is downloaded now, used by VAR later
+  target_ticker: TSLA
+  start: "2021-01-01"
+  end: null                   # exclusive; null = latest available
+  raw_dir: stock_pred/data/raw
+  # yfinance "Close" is split-adjusted but not dividend-adjusted,
+  # i.e. the quoted closing price on the target date.
+  price_field: Close
+
+forecast:
+  # Forecast made after the close of cutoff_date for target_date.
+  cutoff_date: "2026-11-30"
+  target_date: "2026-12-01"
+  # Dollar point forecast = median of the predictive distribution.
+  point_forecast: median
+  interval_level: 0.95

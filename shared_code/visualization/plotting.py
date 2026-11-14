@@ -1,4 +1,6 @@
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def plot_forecasts(
     results: pd.DataFrame
@@ -15,9 +17,6 @@ def plot_acf_pacf(
 ):
     ...
 
-
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 def plot_predictive_cdf(distribution, ax=None):
