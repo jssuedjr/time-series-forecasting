@@ -1,0 +1,2 @@
+origin_date,target_date,model,y_true,y_pred,predictive_mean,interval_lower,interval_upper
+2026-11-20,2026-11-23,ARIMAModel,,346.72906585864786,347.30447741948467,322.766822431932,373.3186226626482

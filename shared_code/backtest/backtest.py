@@ -141,15 +141,16 @@ def univariate_backtest(
 
         for h in range(horizon):
             results.append({
-                "origin": data.index[t - 1],
-                "target": data.index[t + h],
+                "origin_date": data.index[t - 1],
+                "target_date": data.index[t + h],
                 "horizon": h + 1,
+                "model": getattr(model_class, "__name__", type(model).__name__),
                 "strategy": strategy,
                 "train_start": data.index[start],
                 "train_size": len(train),
-                "actual": test[h],
-                "predicted": forecast[h],
-                "error": test[h] - forecast[h]
+                "y_true": test[h],
+                "y_pred": forecast[h],
+                "error": test[h] - forecast[h],
             })
 
     return pd.DataFrame(results)

@@ -1,0 +1,12 @@
+{
+  "order": [
+    0,
+    1,
+    1
+  ],
+  "trend": null,
+  "validation_rmse": 13.777535708649106,
+  "selection": "TRAIN-only BIC screen + frozen VALIDATION RMSE",
+  "window_size": 252,
+  "validation_step": 1
+}
