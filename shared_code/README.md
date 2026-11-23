@@ -21,4 +21,6 @@ origin_date	target_date	horizon	y_true	y_pred	model
 2026-09-30	2026-10-02	2	    252.1	249.2	ARIMA
 2026-10-01	2026-10-02	1	    252.1	250.5	ARIMA
 
+^optional columns: strategy, train_start, train_size, error, split, predictive_mean, interval_lower, and interval_upper
+
 
