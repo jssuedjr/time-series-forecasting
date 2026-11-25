@@ -1,7 +1,16 @@
 """Simple one-hidden-layer MLP forecasting TSLA log returns, returning prices.
 
 Uses only each supplied training window for normalization and fit.
+
+Your code includes:
+- Architecture: One hidden layer with 16 neurons by default.
+- Activation: Hyperbolic tangent (tanh).
+- Loss: Mean squared error, with its gradient calculated manually.
+- Optimization: Adam, including first and second moments and bias correction.
+- Preprocessing: Log returns standardized using the training window.
+- Forecasting: Recursive multi-step predictions, converted back into prices.
 """
+
 import numpy as np
 from .model_interface import ForecastModel
 
