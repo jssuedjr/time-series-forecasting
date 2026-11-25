@@ -21,7 +21,7 @@ def plot_training_acf_pacf(train_prices,lags=30):
                           (axes[1,0],r,plot_acf,'Log-return ACF'),(axes[1,1],r,plot_pacf,'Log-return PACF')]:
         kw={'method':'ywm'} if fn is plot_pacf else {}
         fn(s,lags=min(lags,len(s)//2-1),ax=ax,**kw);ax.set_title(title)
-    fig.suptitle('Training data: autocorrelation and partial autocorrelation')
+    fig.suptitle('Training data: autocorrelation and partial autocorrelation vs lag')
     return fig,axes
 
 def plot_forecasts(results):

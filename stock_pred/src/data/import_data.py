@@ -2,7 +2,7 @@
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
+import numpy as np
 import pandas as pd
 import yfinance as yf
 
