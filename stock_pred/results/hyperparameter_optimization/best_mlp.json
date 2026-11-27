@@ -1,0 +1,27 @@
+{
+  "model_kwargs": {
+    "n_lags": 5,
+    "hidden_size": 16,
+    "epochs": 50,
+    "learning_rate": 0.002696982267395176,
+    "random_state": 42
+  },
+  "validation_rmse": 14.120878077275103,
+  "seed_validation_rmse": [
+    {
+      "seed": 42,
+      "validation_rmse": 14.120878077275103
+    },
+    {
+      "seed": 123,
+      "validation_rmse": 14.047164817799503
+    },
+    {
+      "seed": 2026,
+      "validation_rmse": 14.089132470614953
+    }
+  ],
+  "selection": "frozen VALIDATION one-step RMSE; train window only; Optuna search",
+  "window_size": 252,
+  "validation_step": 1
+}
