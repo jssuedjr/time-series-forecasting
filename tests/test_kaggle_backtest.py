@@ -106,6 +106,37 @@ def test_run_fold_hides_targets_and_recomputes_zero_flags(panel):
     pd.testing.assert_frame_equal(panel, original)
 
 
+@pytest.mark.parametrize('unit', ['s', 'ms', 'us', 'ns'])
+def test_run_fold_accepts_equivalent_datetime_resolutions(panel, unit):
+    panel = panel.assign(date=panel.date.dt.as_unit(unit))
+    cutoff = bt.FOLDS['F1']
+    result = bt.run_fold(bt.random_walk, panel, cutoff)
+    assert len(result) == 4 * bt.H
+    assert result.date.min() == pd.Timestamp('2017-06-13')
+    assert result.date.max() == pd.Timestamp('2017-06-28')
+    assert result.loc[result.store_nbr == 1, 'pred'].eq(10 + cutoff.dayofweek).all()
+    assert result.loc[result.store_nbr == 2, 'pred'].eq(0).all()
+
+
+def test_backtest_accepts_microsecond_dates_from_parquet(panel, tmp_path):
+    path = tmp_path / 'processed.parquet'
+    panel.assign(date=panel.date.dt.as_unit('us')).to_parquet(path, index=False)
+    restored = bt.load_panel(path)
+    assert restored.date.dtype == np.dtype('datetime64[us]')
+    result = bt.backtest(bt.random_walk, restored, bt.FOLDS)
+    assert len(result['scores']) == 3
+    assert np.isfinite(result['mean'])
+
+
+def test_run_fold_rejects_shifted_times_even_with_16_rows_per_series(panel):
+    cutoff = bt.FOLDS['F1']
+    panel = panel.copy()
+    mask = panel.date == cutoff + pd.Timedelta(days=1)
+    panel.loc[mask, 'date'] += pd.Timedelta(hours=1)
+    with pytest.raises(ValueError, match='16 distinct consecutive dates'):
+        bt.run_fold(bt.random_walk, panel, cutoff)
+
+
 @pytest.mark.parametrize('bad_output', ['missing', 'duplicate', 'nan'])
 def test_run_fold_rejects_invalid_predictions(panel, bad_output):
     def forecast(history, future_X):
