@@ -1,0 +1,3 @@
+model,rmsle
+weekdays + promotion + K=2,0.4469614990600375
+Four-week weekday baseline,0.5397718866987051
