@@ -1,0 +1,2 @@
+# The notebooks recreate the row-by-row forecast tables when run.
+*.parquet
