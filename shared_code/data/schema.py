@@ -1,15 +1,17 @@
 """
-Shared data and forecast-result formats.
+Shared data and forecast-result formats (see shared_code/README.md).
 
 Observed data (long format)
-    series_id | date | target | <extra columns ...>
+    series_id | date | y | <extra columns ...>
 
-Forecast / backtest results
-    model | series_id | forecast_origin | target_date | horizon
-    | actual | prediction [| lower | upper]
+Forecast / backtest results (produced by backtest.univariate_backtest and
+checked by validation.validate_backtest_results)
+    origin_date | target_date | horizon | model | y_true | y_pred
+    [| series_id | error | interval_lower | interval_upper | ...]
 
-`forecast_origin` is the last date whose information is available
-when the forecast is made (e.g. the close of that trading day).
+`origin_date` is the last date whose information is available when the
+forecast is made (e.g. the close of that trading day). Errors use the
+convention y_true - y_pred.
 """
 
 from collections.abc import Sequence
@@ -18,18 +20,17 @@ import pandas as pd
 
 ID_COL = "series_id"
 DATE_COL = "date"
-TARGET_COL = "target"
+TARGET_COL = "y"
 
 FORECAST_COLUMNS = (
-    "model",
-    "series_id",
-    "forecast_origin",
+    "origin_date",
     "target_date",
     "horizon",
-    "actual",
-    "prediction",
+    "model",
+    "y_true",
+    "y_pred",
 )
-INTERVAL_COLUMNS = ("lower", "upper")
+INTERVAL_COLUMNS = ("interval_lower", "interval_upper")
 
 
 def to_long(
