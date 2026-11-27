@@ -38,3 +38,4 @@ dist/
 
 # Kaggle dataset
 /store-sales-data/
+kaggle_comp/data/
