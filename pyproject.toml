@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 dependencies = [
     "numpy",
     "pandas",
+    "pyarrow",
     "scipy",
     "statsmodels",
     "matplotlib",
@@ -18,6 +19,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+kaggle = [
+    "statsforecast"
+]
 dev = [
     "jupyterlab",
     "ipykernel",
@@ -27,3 +31,4 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["shared_code*"]
+
