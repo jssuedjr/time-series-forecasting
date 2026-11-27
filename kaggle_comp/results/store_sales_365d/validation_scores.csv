@@ -1,0 +1,3 @@
+model,rmsle
+weekdays + promotion + holiday + payday + trend + K=0,0.44647986044255383
+Four-week weekday baseline,0.5397718866987051
