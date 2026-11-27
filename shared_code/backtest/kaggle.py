@@ -127,8 +127,10 @@ def run_fold(
     expected_dates = pd.date_range(cutoff + pd.Timedelta(days=1), periods=H)
     actual_dates = pd.DatetimeIndex(future["date"].unique()).sort_values()
     counts = future.groupby(K, observed=True).size()
+    # DatetimeIndex.equals also compares storage resolution (e.g. us vs ns).
+    # Parquet can preserve a different resolution; compare timestamp values.
     if (
-        not actual_dates.equals(expected_dates)
+        not np.array_equal(actual_dates, expected_dates)
         or not counts.eq(H).all()
         or future.duplicated(K + ["date"]).any()
     ):
