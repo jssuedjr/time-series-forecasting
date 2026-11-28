@@ -1,0 +1,2 @@
+origin_date,target_date,model,y_true,y_pred,predictive_mean,interval_lower,interval_upper
+2026-11-27,2026-11-30,ARIMAGARCHModel,,400.0451134190524,400.7686117831091,373.5275728458306,428.7501376689821

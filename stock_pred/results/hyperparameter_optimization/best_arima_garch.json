@@ -1,0 +1,12 @@
+{
+  "model_kwargs": {
+    "ar_order": 0,
+    "garch_p": 1,
+    "garch_q": 1,
+    "dist": "t"
+  },
+  "window_size": 750,
+  "validation_qlike": -5.382229960557359,
+  "validation_rmse": 13.74446521075413,
+  "selection": "frozen VALIDATION one-step QLIKE; TRAIN/VALIDATION only"
+}

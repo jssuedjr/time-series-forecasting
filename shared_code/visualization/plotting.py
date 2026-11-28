@@ -1,5 +1,6 @@
 """Reusable plots for canonical backtest results and predictive distributions."""
 import numpy as np
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
@@ -24,8 +25,14 @@ def plot_training_acf_pacf(train_prices,lags=30):
     fig.suptitle('Training data: autocorrelation and partial autocorrelation vs lag')
     return fig,axes
 
-def plot_forecasts(results):
-    return plot_backtest_comparison(results)
+def plot_forecasts(results,title='Rolling-window forecasts'):
+    """Plot actual vs. predicted values for a single backtest results table."""
+    data=validate_backtest_results(results).sort_values('target_date')
+    fig,ax=plt.subplots(figsize=(12,4),constrained_layout=True)
+    ax.plot(data['target_date'],data['y_true'],label='Actual')
+    ax.plot(data['target_date'],data['y_pred'],label='Forecast',alpha=.8)
+    ax.set(title=title,ylabel='Value');ax.legend()
+    return fig,ax
 
 def plot_backtest_comparison(validation,test):
     fig,axes=plt.subplots(2,1,figsize=(12,8),constrained_layout=True)

@@ -1,6 +1,10 @@
+import numpy as np
 """Forecast accuracy and interval metrics for canonical backtest tables."""
 import numpy as np
 import pandas as pd
+
+
+
 from shared_code.validation import validate_numeric_pair, validate_forecast_results
 
 
@@ -52,6 +56,23 @@ def evaluate_forecasts(results:pd.DataFrame, metrics=('rmse','mae','rmsle'), gro
         rows.append(row)
     return pd.DataFrame(rows)
 
+def interval_score(y_true, lower, upper, level=0.95) -> float:
+    """Mean interval (Winkler) score of central (level) prediction intervals.
+
+    width + (2/alpha) * (lower - y) if y < lower + (2/alpha) * (y - upper) if y > upper.
+    Lower is better; rewards narrow intervals and penalizes misses
+    (Gneiting & Raftery, 2007).
+    """
+    if not 0 < level < 1:
+        raise ValueError('level must be between 0 and 1')
+    y, lo = validate_numeric_pair(y_true, lower)
+    _, hi = validate_numeric_pair(y_true, upper)
+    if (lo > hi).any():
+        raise ValueError('lower bounds must not exceed upper bounds')
+    alpha = 1 - level
+    score = (hi - lo) + (2/alpha)*np.maximum(lo - y, 0) + (2/alpha)*np.maximum(y - hi, 0)
+    return float(np.mean(score))
+
 def interval_summary(results:pd.DataFrame, level=0.95)->pd.DataFrame:
     required=['y_true','interval_lower','interval_upper']
     missing=set(required)-set(results.columns)
@@ -61,6 +82,7 @@ def interval_summary(results:pd.DataFrame, level=0.95)->pd.DataFrame:
     covered=x['y_true'].between(x['interval_lower'],x['interval_upper'])
     return pd.DataFrame([{'nominal_coverage':level,'empirical_test_coverage':float(covered.mean()),
                           'mean_interval_width_dollars':float((x['interval_upper']-x['interval_lower']).mean()),
+                          'mean_interval_score':interval_score(x['y_true'],x['interval_lower'],x['interval_upper'],level),
                           'n_test_forecasts':len(x)}])
 
 def compare_point_forecasts(results:pd.DataFrame)->pd.DataFrame:

@@ -139,8 +139,16 @@ def univariate_backtest(
         if not np.isfinite(forecast).all():
             raise ValueError("Non-finite forecast values")
 
+        # Optional: models with time-varying volatility (e.g. GARCH) report
+        # the forecast std. dev. of the log return, used to standardize errors.
+        scale = None
+        if hasattr(model, "predict_scale"):
+            scale = np.asarray(model.predict_scale(horizon), dtype=float)
+            if scale.shape != (horizon,) or not (np.isfinite(scale).all() and (scale > 0).all()):
+                raise ValueError("predict_scale must return positive finite values")
+
         for h in range(horizon):
-            results.append({
+            row = {
                 "origin_date": data.index[t - 1],
                 "target_date": data.index[t + h],
                 "horizon": h + 1,
@@ -151,6 +159,9 @@ def univariate_backtest(
                 "y_true": test[h],
                 "y_pred": forecast[h],
                 "error": test[h] - forecast[h],
-            })
+            }
+            if scale is not None:
+                row["pred_scale"] = scale[h]
+            results.append(row)
 
     return pd.DataFrame(results)

@@ -2,6 +2,14 @@
 
 Assumes shared_code.backtest.backtest.univariate_backtest returns canonical
 columns: origin_date, target_date, horizon, model, y_true, y_pred, error.
+
+Interval calibration (validation errors only):
+- Default (models without predict_scale): additive dollar errors,
+  interval = y_pred + empirical quantiles of validation errors.
+- Volatility-scaled (models with predict_scale, e.g. ARIMA-GARCH):
+  z = log(y_true / y_pred) / pred_scale on validation, and
+  interval = y_pred * exp(empirical quantile of z * pred_scale at the origin),
+  so the width follows the model's volatility forecast.
 """
 from dataclasses import dataclass
 from functools import partial
@@ -27,6 +35,42 @@ class ForecastResults:
     forecast: pd.DataFrame
     predictive_samples: np.ndarray
     distribution: EmpiricalPredictiveDistribution
+    # Set only for volatility-scaled models: validation standardized log errors.
+    standardized_errors: np.ndarray | None = None
+
+    def predictive_distribution(self, point, scale=None):
+        """Predictive distribution for a new point forecast, using the frozen
+        validation calibration (scale is required for volatility-scaled models)."""
+        return build_predictive_distribution(
+            point, self.calibration_errors, self.standardized_errors, scale)
+
+
+def standardized_log_errors(frame: pd.DataFrame) -> np.ndarray:
+    """z = log(y_true / y_pred) / pred_scale for a volatility-scaled backtest."""
+    actual = frame["y_true"].to_numpy(dtype=float)
+    pred = frame["y_pred"].to_numpy(dtype=float)
+    scale = frame["pred_scale"].to_numpy(dtype=float)
+    if (actual <= 0).any() or (pred <= 0).any() or (scale <= 0).any():
+        raise ValueError("Volatility scaling requires positive prices and scales")
+    return np.log(actual / pred) / scale
+
+
+def build_predictive_distribution(point, calibration_errors,
+                                  standardized_errors=None, scale=None):
+    """Empirical predictive distribution of the next price.
+
+    Additive:  samples = point + validation dollar errors.
+    Scaled:    samples = point * exp(z * scale), z = validation standardized
+               log errors (expressed as dollar offsets so the shared
+               EmpiricalPredictiveDistribution class can be reused).
+    """
+    point = float(point)
+    if standardized_errors is None:
+        return EmpiricalPredictiveDistribution(point, calibration_errors)
+    if scale is None or not np.isfinite(scale) or scale <= 0:
+        raise ValueError("A positive volatility scale is required for this model")
+    offsets = point * np.expm1(np.asarray(standardized_errors, dtype=float) * float(scale))
+    return EmpiricalPredictiveDistribution(point, offsets)
 
 
 def run_forecasting_pipeline(
@@ -97,12 +141,25 @@ def run_forecasting_pipeline(
         raise AssertionError("Validation and test targets overlap")
 
     calibration_errors = validation["error"].to_numpy(dtype=float).copy()
-    # Reuse exactly the same inverse-ECDF quantile convention as the final forecast.
-    error_distribution = EmpiricalPredictiveDistribution(0.0, calibration_errors)
-    q_low, q_high = error_distribution.interval(interval_level)
-    test["predictive_mean"] = test["y_pred"] + error_distribution.mean()
-    test["interval_lower"] = test["y_pred"] + q_low
-    test["interval_upper"] = test["y_pred"] + q_high
+    volatility_scaled = "pred_scale" in validation.columns
+    standardized_errors = None
+    if volatility_scaled:
+        # Option B: standardized residuals rescaled by each origin's volatility.
+        standardized_errors = standardized_log_errors(validation)
+        z_distribution = EmpiricalPredictiveDistribution(0.0, standardized_errors)
+        z_low, z_high = z_distribution.interval(interval_level)
+        pred = test["y_pred"].to_numpy(dtype=float)
+        scale = test["pred_scale"].to_numpy(dtype=float)
+        test["interval_lower"] = pred * np.exp(z_low * scale)
+        test["interval_upper"] = pred * np.exp(z_high * scale)
+        test["predictive_mean"] = pred * np.exp(np.outer(scale, standardized_errors)).mean(axis=1)
+    else:
+        # Reuse exactly the same inverse-ECDF quantile convention as the final forecast.
+        error_distribution = EmpiricalPredictiveDistribution(0.0, calibration_errors)
+        q_low, q_high = error_distribution.interval(interval_level)
+        test["predictive_mean"] = test["y_pred"] + error_distribution.mean()
+        test["interval_lower"] = test["y_pred"] + q_low
+        test["interval_upper"] = test["y_pred"] + q_high
     test["covered"] = (
         (test["y_true"] >= test["interval_lower"])
         & (test["y_true"] <= test["interval_upper"])
@@ -120,6 +177,7 @@ def run_forecasting_pipeline(
     summary = interval_summary(test, interval_level).iloc[0]
     evaluation.loc[mask, 'interval_coverage'] = summary['empirical_test_coverage']
     evaluation.loc[mask, 'mean_interval_width'] = summary['mean_interval_width_dollars']
+    evaluation.loc[mask, 'interval_score'] = summary['mean_interval_score']
 
     # Fit with the same rolling-window policy used for historical forecasts.
     model = model_factory()
@@ -128,7 +186,9 @@ def run_forecasting_pipeline(
     if prediction.shape != (1,) or not np.isfinite(prediction).all():
         raise ValueError("Model must return one finite forecast for horizon=1")
     point = float(prediction[0])
-    distribution = EmpiricalPredictiveDistribution(point, calibration_errors)
+    live_scale = float(model.predict_scale(1)[0]) if volatility_scaled else None
+    distribution = build_predictive_distribution(
+        point, calibration_errors, standardized_errors, live_scale)
     lower, upper = distribution.interval(interval_level)
     forecast = pd.DataFrame([{
         "origin_date": prices.index[-1],
@@ -141,13 +201,18 @@ def run_forecasting_pipeline(
         "interval_upper": upper,
         "interval_level": interval_level,
         "n_calibration_errors": len(calibration_errors),
+        "pred_scale": live_scale,
     }])
+    # For scaled models, diagnose the standardized errors: remaining ARCH
+    # effects there mean the volatility model has not captured the clustering.
+    diagnosed = standardized_errors if volatility_scaled else calibration_errors
     return ForecastResults(
         model_name=name, train=prices.iloc[:train_end],
         validation=validation, test=test,
         calibration_errors=calibration_errors,
-        validation_diagnostics=forecast_error_diagnostics(calibration_errors),
+        validation_diagnostics=forecast_error_diagnostics(diagnosed),
         evaluation=evaluation, forecast=forecast,
         predictive_samples=distribution.samples,
         distribution=distribution,
+        standardized_errors=standardized_errors,
     )
