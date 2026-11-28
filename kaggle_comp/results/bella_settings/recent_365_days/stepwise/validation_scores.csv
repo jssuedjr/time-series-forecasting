@@ -1,0 +1,2 @@
+training_window,predictor_choice,predictors,selection_sample_rmsle,final_validation_rmsle,final_validation_rows,weekday_baseline_rmsle
+Recent 365 days,Stepwise selection,weekdays + promotion + holiday by area + trend,0.3384926364268181,0.44538489085298255,28512,0.5397718866987051
