@@ -14,7 +14,8 @@ dependencies = [
     "scipy",
     "statsmodels",
     "matplotlib",
-    "yfinance"
+    "yfinance",
+    "arch"
 ]
 
 [project.optional-dependencies]
