@@ -1,0 +1,5 @@
+candidate,selection_rmsle,predictors,columns,AutoARIMA,selection_step,selected
+weekdays,0.359245653453414,6,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6",24,0,False
+weekdays + promotion,0.35225995950725825,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo",24,1,False
+weekdays + promotion + trend,0.34042533996887064,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, trend_years",24,2,False
+weekdays + promotion + holiday by area + trend,0.3384926364268181,11,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, hol_national, hol_regional, hol_local, trend_years",24,3,True
