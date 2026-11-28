@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 kaggle = [
-    "statsforecast"
+    "statsforecast==2.0.3"
 ]
 dev = [
     "jupyterlab",
