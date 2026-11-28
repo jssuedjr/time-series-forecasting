@@ -1,7 +1,10 @@
 """Checks for the two training windows and the predictor search."""
 
+from unittest.mock import Mock
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from kaggle_comp.src import selection
 from shared_code.backtest import kaggle as bt
@@ -69,54 +72,50 @@ def test_pooled_score_uses_squared_errors():
     assert np.isclose(ranking.loc["A", "selection_rmsle"], np.sqrt(0.32))
 
 
-def test_failed_final_fit_retries_selected_orders_and_falls_back(monkeypatch):
-    import pytest
+@pytest.fixture
+def series_and_model(monkeypatch):
     models = pytest.importorskip("statsforecast.models")
-    from unittest.mock import Mock
-
-    dates = pd.date_range("2017-01-01", periods=60)
-    history = pd.DataFrame({"date": dates, "sales": np.arange(60) % 13})
-    future = pd.DataFrame({"date": pd.date_range(dates[-1] + pd.Timedelta(days=1), periods=16)})
-    selected = Mock()
-    selected.model_ = {"code": 2, "arma": (0, 1, 1, 0, 7, 1, 0), "coef": {"ma1": -0.8}}
-    monkeypatch.setattr(models, "AutoARIMA", Mock(return_value=selected))
-    factory = Mock(return_value={"code": 2})
-    monkeypatch.setattr("statsforecast.arima.Arima", factory)
-
-    pred, info = selection.forecast_one(history, future, [])
-    retry = factory.call_args.kwargs
-    assert retry["order"] == (0, 1, 1)
-    assert retry["seasonal"] == {"order": (1, 0, 0), "period": 7}
-    assert retry["method"] == "ML" and not retry["include_mean"] and not retry["include_drift"]
-    assert retry["optim_control"]["gtol"] == 1e-5
-    selected.predict.assert_not_called()
-    np.testing.assert_allclose(pred, selection.baseline_one(history, future))
-    assert info["method"] == "weekday baseline" and "ML retry returned code 2" in info["note"]
+    dates = pd.date_range("2017-01-01", periods=76)
+    series = pd.DataFrame({"date": dates, "sales": np.arange(len(dates)) % 13})
+    for day, name in enumerate(selection.WEEKDAYS, start=1):
+        series[name] = (dates.weekday == day).astype(float)
+    history, future = series.iloc[:60], series.iloc[60:]
+    model = Mock()
+    factory = Mock(return_value=model)
+    monkeypatch.setattr(models, "AutoARIMA", factory)
+    return history, future, model, factory
 
 
-def test_successful_retry_uses_its_forecast_and_original_predictors(monkeypatch):
-    import pytest
-    models = pytest.importorskip("statsforecast.models")
-    from unittest.mock import Mock
+def test_forecast_uses_bellas_autoarima_settings_and_keeps_weekdays(series_and_model):
+    history, future, model, factory = series_and_model
+    model.model_ = {"code": 2, "arma": (0, 0, 0, 0, 7, 0, 0), "coef": {},
+                    "bic": 2.0, "xreg": history[selection.WEEKDAYS].to_numpy(),
+                    "residuals": np.linspace(-1, 1, len(history))}
+    model.predict.return_value = {"mean": np.full(len(future), np.log1p(2.0))}
 
-    history = pd.DataFrame({"date": pd.date_range("2017-01-01", periods=60),
-                            "sales": np.arange(60) % 13, "payday": (np.arange(60) % 15 == 0)})
-    future = pd.DataFrame({"date": pd.date_range("2017-03-02", periods=16),
-                           "payday": (np.arange(16) % 15 == 0)})
-    selected = Mock()
-    selected.model_ = {"code": 2, "arma": (0, 0, 0, 0, 1, 0, 0),
-                       "coef": {"intercept": 1.0, "ex_1": 0.2}}
-    monkeypatch.setattr(models, "AutoARIMA", Mock(return_value=selected))
-    fit = dict(selected.model_, code=0, bic=2.0, sigma2=0.2, xreg=history[["payday"]],
-               residuals=np.linspace(-1, 1, 60))
-    factory = Mock(return_value=fit)
-    monkeypatch.setattr("statsforecast.arima.Arima", factory)
-    selected.predict.return_value = {"mean": np.full(16, np.log1p(2.0))}
+    pred, info = selection.forecast_one(history, future, selection.WEEKDAYS)
 
-    pred, info = selection.forecast_one(history, future, ["payday"])
-    assert factory.call_args.kwargs["include_mean"]
-    assert selected.model_ is fit
-    np.testing.assert_array_equal(factory.call_args.kwargs["xreg"], history[["payday"]])
-    np.testing.assert_array_equal(selected.predict.call_args.kwargs["X"], future[["payday"]])
+    factory.assert_called_once_with(season_length=7, ic="bic")
+    model.fit.assert_called_once()
+    np.testing.assert_allclose(model.fit.call_args.args[0], np.log1p(history.sales))
+    np.testing.assert_array_equal(model.fit.call_args.kwargs["X"], history[selection.WEEKDAYS])
+    np.testing.assert_array_equal(model.predict.call_args.kwargs["X"], future[selection.WEEKDAYS])
     np.testing.assert_allclose(pred, 2.0)
-    assert info["method"] == "AutoARIMA" and "retried" in info["note"]
+    assert info["method"] == "AutoARIMA"
+
+
+@pytest.mark.parametrize(("failure", "expected_note"), [
+    ("fit error", "Fit failed"), ("nonfinite forecast", "Invalid forecast"),
+])
+def test_forecast_uses_weekday_baseline_if_fit_or_forecast_fails(series_and_model, failure, expected_note):
+    history, future, model, _ = series_and_model
+    if failure == "fit error":
+        model.fit.side_effect = ValueError("Fit failed")
+    else:
+        model.predict.return_value = {"mean": np.full(len(future), np.nan)}
+
+    pred, info = selection.forecast_one(history, future, selection.WEEKDAYS)
+
+    np.testing.assert_allclose(pred, selection.baseline_one(history, future))
+    assert info["method"] == "weekday baseline"
+    assert expected_note in info["note"]
