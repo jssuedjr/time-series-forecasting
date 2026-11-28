@@ -1,5 +1,5 @@
 training_window,predictor_choice,predictors,selection_sample_rmsle,final_validation_rmsle,weekday_baseline_rmsle,final_validation_rows
-Recent 365 days,Best subset,weekdays + promotion + holiday + payday + trend + K=0,0.3463517442368917,0.44647986044255383,0.5397718866987051,28512
-Recent 365 days,Fixed predictors,weekdays + promotion + K=2,0.4086803068567966,0.4778356708058071,0.5397718866987051,28512
+Recent 365 days,Best subset,weekdays + promotion + holiday + payday + trend + K=0,0.3463518646634823,0.4464843019594204,0.5397718866987051,28512
+Recent 365 days,Fixed predictors,weekdays + promotion + K=2,0.408680301958011,0.4778356708058071,0.5397718866987051,28512
 All available dates,Best subset,weekdays + promotion + holiday + K=0,0.3554106091009104,0.4543237324954647,0.5397718866987051,28512
 All available dates,Fixed predictors,weekdays + promotion + K=2,0.3587181282240214,0.4562276404220329,0.5397718866987051,28512
