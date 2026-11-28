@@ -58,6 +58,19 @@ def _training_log_sales(history):
     return y
 
 
+def _retry_fit(selected, y, x_train):
+    """Retry the selected orders with direct maximum likelihood."""
+    from statsforecast.arima import Arima
+
+    p, q, P, Q, period, d, D = selected["arma"]
+    coef = selected["coef"]
+    # The low-level fit accepts SciPy BFGS's standard gradient tolerance.
+    return Arima(y, order=(p, d, q), seasonal={"order": (P, D, Q), "period": period},
+                 xreg=x_train, include_mean=("intercept" in coef or "constant" in coef),
+                 include_drift="drift" in coef, method="ML",
+                 optim_control={"maxiter": 100, "gtol": 1e-5})
+
+
 def forecast_one(history, future, columns):
     """Fit the weekday regression with ARIMA errors for one store and family."""
     from statsforecast.arima import arima_string
@@ -91,23 +104,34 @@ def forecast_one(history, future, columns):
         start_p=0, start_q=0, start_P=0, start_Q=0,
         stepwise=True, nmodels=12, approximation=True,
     )
+    notes = []
     try:
         with warnings.catch_warnings(record=True) as fit_warnings:
             warnings.simplefilter("always")
             model.fit(y, X=x_train)
+            code = model.model_["code"]
+            if code != 0:
+                notes.append(f"Final fit returned code {code}; retried the same orders using ML.")
+                fit = _retry_fit(model.model_, y, x_train)
+                if fit["code"] != 0:
+                    raise ValueError(f"ML retry returned code {fit['code']}.")
+                if not np.isfinite([fit["bic"], fit["sigma2"], *fit["coef"].values()]).all():
+                    raise ValueError("ML retry returned nonfinite estimates.")
+                model.model_ = fit
             log_prediction = model.predict(h=len(future), X=x_future)["mean"]
             prediction = np.expm1(np.maximum(0, np.asarray(log_prediction)))
         if prediction.shape != (len(future),) or not np.isfinite(prediction).all():
             raise ValueError("Invalid forecast")
     except (ValueError, ArithmeticError, RuntimeError, np.linalg.LinAlgError) as error:
-        info.update(method="weekday baseline", note=f"{type(error).__name__}: {error}")
+        notes.append(f"{type(error).__name__}: {error}")
+        info.update(method="weekday baseline", note=" ".join(notes))
         return baseline_one(history, future), info
 
     errors = pd.Series(model.model_["residuals"])
     info.update(method="AutoARIMA", order=arima_string(model.model_).strip(),
                 bic=float(model.model_["bic"]), acf_lag1=errors.autocorr(1),
                 acf_lag7=errors.autocorr(7),
-                note=" | ".join(dict.fromkeys(str(w.message) for w in fit_warnings)))
+                note=" | ".join(dict.fromkeys([*notes, *(str(w.message) for w in fit_warnings)])))
     return prediction, info
 
 
