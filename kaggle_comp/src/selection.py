@@ -111,7 +111,7 @@ def forecast_one(history, future, columns):
             model.fit(y, X=x_train)
             code = model.model_["code"]
             if code != 0:
-                notes.append(f"Final fit returned code {code}; retried the same orders using ML.")
+                notes.append(f"Final fit returned code {code}. The model retried the same orders using ML.")
                 fit = _retry_fit(model.model_, y, x_train)
                 if fit["code"] != 0:
                     raise ValueError(f"ML retry returned code {fit['code']}.")
