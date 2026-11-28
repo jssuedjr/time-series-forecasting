@@ -1,0 +1,26 @@
+candidate,selection_rmsle,predictors,columns,AutoARIMA,selection_step,selected
+weekdays + promotion + make-up workday,0.3551312475521875,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, work_day",24,,False
+weekdays + promotion + holiday,0.35514685183472644,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, holiday",24,,False
+weekdays + promotion,0.35521095394964775,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo",24,1,True
+weekdays + promotion + payday,0.3552116771157167,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, payday",24,,False
+weekdays + promotion + earthquake,0.3552124632311839,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, earthquake",24,,False
+weekdays + promotion + event,0.35538555226692237,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, event",24,,False
+weekdays + promotion + event types,0.35552462908557886,9,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, event_shopping, event_sports",24,,False
+weekdays + promotion + previous promotion,0.3560316060890207,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, log_promo_lag1",24,,False
+weekdays + promotion + payday + day after payday,0.3566620994048118,9,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, payday, after_payday",24,,False
+weekdays + promotion + closed,0.359052620014168,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, closed",24,,False
+weekdays + promotion + holiday by area,0.36135655086073465,10,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, hol_national, hol_regional, hol_local",24,,False
+weekdays + promotion + annual pair 1,0.3623252049030036,9,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, sin1, cos1",24,,False
+weekdays + holiday,0.36904912679353186,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, holiday",24,,False
+weekdays + make-up workday,0.36935184450735414,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, work_day",24,,False
+weekdays + earthquake,0.3694301084357563,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, earthquake",24,,False
+weekdays,0.369431833388069,6,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6",24,0,False
+weekdays + event,0.36962224865128523,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, event",24,,False
+weekdays + payday,0.3697721197523116,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, payday",24,,False
+weekdays + event types,0.369835443210058,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, event_shopping, event_sports",24,,False
+weekdays + payday + day after payday,0.3706440514714478,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, payday, after_payday",24,,False
+weekdays + closed,0.3712721230760537,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, closed",24,,False
+weekdays + annual pair 1,0.37581332116516697,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, sin1, cos1",24,,False
+weekdays + holiday by area,0.3758787902583374,9,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, hol_national, hol_regional, hol_local",24,,False
+weekdays + promotion + trend,0.3880556647686401,8,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, log_promo, trend_years",24,,False
+weekdays + trend,0.3978372745069046,7,"dow_1, dow_2, dow_3, dow_4, dow_5, dow_6, trend_years",24,,False
