@@ -1,0 +1,2 @@
+training_window,predictor_choice,predictors,selection_sample_rmsle,final_validation_rmsle,final_validation_rows,weekday_baseline_rmsle
+All available dates,Stepwise selection,weekdays + promotion,0.35521095394964775,0.4471274878998027,28512,0.5397718866987051
