@@ -65,3 +65,23 @@ predictors. The search starts with weekdays and compares changes on F1–F3.
 The notebook shows the accepted steps. Both options score the final holdout
 on every store and family. The Kaggle submission is saved in the same run
 folder under `kaggle_comp/results/bella_predictors/`.
+
+### Stepwise results
+
+Both runs used the same eight store–family series on F1–F3. The final holdout
+covers all 1,782 series from July 31 through August 15, 2017.
+
+| Training window | Selected predictors | Lists tested | F1–F3 RMSLE on eight series | Final validation RMSLE |
+| --- | --- | ---: | ---: | ---: |
+| Recent 365 days | Weekdays, promotion, holidays by area, event, trend | 42 | 0.34279 | 0.45327 |
+| All history | Weekdays, promotion, holiday | 36 | 0.37916 | 0.46677 |
+
+The day after payday was tested in both runs. The earthquake was tested only
+with all history. Neither was selected. In the final holdout, 107 recent-year series and 890
+all-history series used the weekday baseline after a failed retry.
+
+An earlier 365-day stepwise run scored 0.51092. One failed fit gave store 43
+an extremely high PET SUPPLIES forecast on a local holiday. The stepwise model
+now checks whether the fit converged and retries using the training data. On
+the same holdout, that forecast was 3.73 units and actual sales were 2. The
+corrected score above is a second check on those same dates.
