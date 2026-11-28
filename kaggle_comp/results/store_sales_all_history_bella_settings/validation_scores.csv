@@ -1,0 +1,3 @@
+model,rmsle
+weekdays + promotion + holiday + K=0,0.44652313223197376
+Four-week weekday baseline,0.5397718866987051
