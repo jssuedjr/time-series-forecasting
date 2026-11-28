@@ -1,0 +1,2 @@
+training_window,predictor_choice,predictors,selection_sample_rmsle,final_validation_rmsle,final_validation_rows
+Recent 365 days,Fixed predictors,log_promo + holiday + event + closed,,0.4523769621148978,28512
