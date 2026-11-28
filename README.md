@@ -64,9 +64,13 @@ Choose **Stepwise selection** to try the extra calendar and promotion
 predictors. The search starts with weekdays and compares changes on F1–F3.
 The notebook shows the accepted steps. Both options score the final holdout
 on every store and family. The Kaggle submission is saved in the same run
-folder under `kaggle_comp/results/bella_predictors/`.
+folder under `kaggle_comp/results/bella_settings/`.
 
-### Stepwise results
+### Previous stepwise results
+
+These results used the earlier restricted AutoARIMA settings and retry procedure.
+The current code uses Bella’s `AutoARIMA(season_length=7, ic="bic")` call for
+both predictor choices. New runs save to `kaggle_comp/results/bella_settings/`.
 
 Both runs used the same eight store–family series on F1–F3. The final holdout
 covers all 1,782 series from July 31 through August 15, 2017.
@@ -81,7 +85,7 @@ with all history. Neither was selected. In the final holdout, 107 recent-year se
 all-history series used the weekday baseline after a failed retry.
 
 An earlier 365-day stepwise run scored 0.51092. One failed fit gave store 43
-an extremely high PET SUPPLIES forecast on a local holiday. The stepwise model
-now checks whether the fit converged and retries using the training data. On
+an extremely high PET SUPPLIES forecast on a local holiday. That version of the stepwise model
+checked whether the fit converged and retried using the training data. On
 the same holdout, that forecast was 3.73 units and actual sales were 2. The
 corrected score above is a second check on those same dates.
