@@ -45,3 +45,22 @@ univariate stock backtester remains in `shared_code/backtest/backtest.py`.
 
 Run the tests with `python -m pytest`. Forecasting tests use synthetic panels;
 they do not download competition data or establish Kaggle accuracy scores.
+
+### Store sales results using Bella’s AutoARIMA settings
+
+Run `kaggle_comp/store_sales.ipynb` for the most recent 365 days or `kaggle_comp/store_sales_all_history.ipynb` for all available dates. These two notebooks read the original CSV files in `kaggle_comp/data/` directly. Run the cells from top to bottom.
+
+Both use `AutoARIMA(season_length=7, ic="bic")` from StatsForecast 2.0.3 for this comparison. AutoARIMA uses BIC to choose the error model for each store and product family.
+
+**Best subset** tests all 48 predictor lists in these notebooks. Each list includes weekday indicators. The optional predictors are promotion, holiday, payday, trend and up to two annual Fourier pairs. Selection uses the RMSLE across F1–F3 for the same eight store–family series in both branches. The final validation RMSLE uses all 1,782 series over July 31–August 15, 2017, giving 28,512 forecasts. Lower RMSLE is better.
+
+| Training window | Selected predictors | F1–F3 RMSLE on eight series | Final validation RMSLE |
+| --- | --- | ---: | ---: |
+| Recent 365 days | Weekdays, promotion, holiday, trend | 0.33899 | 0.44489 |
+| All history | Weekdays, promotion, holiday | 0.35515 | 0.44652 |
+
+Both selected models use zero annual Fourier pairs (`K=0`). The optional fixed-predictor comparison with weekdays, promotion and two annual Fourier pairs was not rerun. The earlier outputs in `kaggle_comp/results/store_sales_365d/` and `kaggle_comp/results/store_sales_all_history/` used restricted AutoARIMA settings.
+
+The score tables and candidate scores are in [the recent 365-day results](kaggle_comp/results/store_sales_365d_bella_settings/) and [the all-history results](kaggle_comp/results/store_sales_all_history_bella_settings/). The earlier results remain in their original folders.
+
+The recent-year holdout had 2 fits with rank warnings, and the all-history holdout had 67. Each of these fits selected weekly differencing, which cancels the repeating weekday indicators. Their separate weekday effects cannot be estimated uniquely. The forecasts were finite and included in the scores. Neither run used the weekday fallback. The notebooks save these notes in `validation_fits.csv`.
