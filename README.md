@@ -45,3 +45,23 @@ univariate stock backtester remains in `shared_code/backtest/backtest.py`.
 
 Run the tests with `python -m pytest`. Forecasting tests use synthetic panels;
 they do not download competition data or establish Kaggle accuracy scores.
+
+### Comparing training windows
+
+Open `kaggle_comp/store_sales.ipynb` for the most recent 365 days or
+`kaggle_comp/store_sales_all_history.ipynb` for all available dates. Both
+notebooks can read the original CSV files in `kaggle_comp/data/` directly.
+Run the cells from top to bottom.
+
+Choose **Fixed predictors** in the first code cell to run Bella's SARIMAX
+model. The recent-year notebook compares its July 31 through August 15
+holdout forecasts with the saved forecasts from notebook 04. Across all 28,512
+holdout rows, the fresh run scored 0.45237696 and Bella’s saved forecasts scored
+0.45235291. Both give 0.4524 to four decimal places. The all-history notebook
+uses a longer training window, so its score can differ.
+
+Choose **Stepwise selection** to try the extra calendar and promotion
+predictors. The search starts with weekdays and compares changes on F1–F3.
+The notebook shows the accepted steps. Both options score the final holdout
+on every store and family. The Kaggle submission is saved in the same run
+folder under `kaggle_comp/results/bella_predictors/`.
