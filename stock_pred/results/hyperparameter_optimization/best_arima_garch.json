@@ -6,7 +6,7 @@
     "dist": "t"
   },
   "window_size": 750,
-  "validation_qlike": -5.38222989672419,
-  "validation_rmse": 13.744465212352425,
+  "validation_qlike": -5.382229960557359,
+  "validation_rmse": 13.74446521075413,
   "selection": "frozen VALIDATION one-step QLIKE; TRAIN/VALIDATION only"
 }
