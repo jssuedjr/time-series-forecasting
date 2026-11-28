@@ -1,0 +1,8 @@
+package,version
+numpy,2.3.5
+pandas,2.2.3
+pyarrow,26.0.1
+scipy,1.15.3
+statsforecast,2.0.3
+joblib,1.5.3
+python,3.12.14
