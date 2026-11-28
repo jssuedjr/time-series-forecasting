@@ -67,3 +67,56 @@ def test_pooled_score_uses_squared_errors():
     ranking = selection._rank(details, {"A": [], "B": ["payday"]})
     assert list(ranking.index) == ["B", "A"]
     assert np.isclose(ranking.loc["A", "selection_rmsle"], np.sqrt(0.32))
+
+
+def test_failed_final_fit_retries_selected_orders_and_falls_back(monkeypatch):
+    import pytest
+    models = pytest.importorskip("statsforecast.models")
+    from unittest.mock import Mock
+
+    dates = pd.date_range("2017-01-01", periods=60)
+    history = pd.DataFrame({"date": dates, "sales": np.arange(60) % 13})
+    future = pd.DataFrame({"date": pd.date_range(dates[-1] + pd.Timedelta(days=1), periods=16)})
+    selected = Mock()
+    selected.model_ = {"code": 2, "arma": (0, 1, 1, 0, 7, 1, 0), "coef": {"ma1": -0.8}}
+    monkeypatch.setattr(models, "AutoARIMA", Mock(return_value=selected))
+    factory = Mock(return_value={"code": 2})
+    monkeypatch.setattr("statsforecast.arima.Arima", factory)
+
+    pred, info = selection.forecast_one(history, future, [])
+    retry = factory.call_args.kwargs
+    assert retry["order"] == (0, 1, 1)
+    assert retry["seasonal"] == {"order": (1, 0, 0), "period": 7}
+    assert retry["method"] == "ML" and not retry["include_mean"] and not retry["include_drift"]
+    assert retry["optim_control"]["gtol"] == 1e-5
+    selected.predict.assert_not_called()
+    np.testing.assert_allclose(pred, selection.baseline_one(history, future))
+    assert info["method"] == "weekday baseline" and "ML retry returned code 2" in info["note"]
+
+
+def test_successful_retry_uses_its_forecast_and_original_predictors(monkeypatch):
+    import pytest
+    models = pytest.importorskip("statsforecast.models")
+    from unittest.mock import Mock
+
+    history = pd.DataFrame({"date": pd.date_range("2017-01-01", periods=60),
+                            "sales": np.arange(60) % 13, "payday": (np.arange(60) % 15 == 0)})
+    future = pd.DataFrame({"date": pd.date_range("2017-03-02", periods=16),
+                           "payday": (np.arange(16) % 15 == 0)})
+    selected = Mock()
+    selected.model_ = {"code": 2, "arma": (0, 0, 0, 0, 1, 0, 0),
+                       "coef": {"intercept": 1.0, "ex_1": 0.2}}
+    monkeypatch.setattr(models, "AutoARIMA", Mock(return_value=selected))
+    fit = dict(selected.model_, code=0, bic=2.0, sigma2=0.2, xreg=history[["payday"]],
+               residuals=np.linspace(-1, 1, 60))
+    factory = Mock(return_value=fit)
+    monkeypatch.setattr("statsforecast.arima.Arima", factory)
+    selected.predict.return_value = {"mean": np.full(16, np.log1p(2.0))}
+
+    pred, info = selection.forecast_one(history, future, ["payday"])
+    assert factory.call_args.kwargs["include_mean"]
+    assert selected.model_ is fit
+    np.testing.assert_array_equal(factory.call_args.kwargs["xreg"], history[["payday"]])
+    np.testing.assert_array_equal(selected.predict.call_args.kwargs["X"], future[["payday"]])
+    np.testing.assert_allclose(pred, 2.0)
+    assert info["method"] == "AutoARIMA" and "retried" in info["note"]
