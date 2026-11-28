@@ -20,7 +20,8 @@ dependencies = [
 
 [project.optional-dependencies]
 kaggle = [
-    "statsforecast"
+    "statsforecast==2.0.3",
+    "joblib"
 ]
 dev = [
     "jupyterlab",
@@ -30,5 +31,5 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["shared_code*"]
+include = ["shared_code*", "kaggle_comp.src*"]
 
